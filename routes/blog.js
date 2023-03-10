@@ -1,6 +1,5 @@
 const express = require("express");
 const mongodb = require("mongodb");
-const { getDb } = require("../data/database");
 
 const db = require("../data/database");
 
@@ -60,27 +59,89 @@ router.post("/posts", async function (req, res) {
 	res.redirect("/posts");
 });
 
-router.get("/posts/:id", async (req, res) => {
-	const postId = req.params.id; // this gets the id part from the URL
+// to display the view full details of the post
+router.get("/posts/:id", async (req, res, next) => {
+	let postId = req.params.id; // this gets the id part from the URL
+
+  try {
+    postId = new ObjectId(postId);
+  } catch(error) {
+    // next is an parameter available for all async funtion that specifies that: to go to the next middleware handler if there is an error
+    return next(error);
+  }
+
 	const post = await db
 		.getDb()
 		.collection("posts")
-		.findOne({ _id: new ObjectId(postId) }, { summary: 0 })
+		.findOne({ _id: postId }, { summary: 0 });
 
-  if(!post) {
-    return res.status(404).render('404');
-  } 
+	if (!post) {
+		return res.status(404).render("404");
+	}
 
-  // creating a property in post for date in a readable format
-  post.humanReadableDate = post.date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-  post.date = post.date.toISOString();
+	// creating a property in post for date in a readable format
+	post.humanReadableDate = post.date.toLocaleDateString("en-US", {
+		weekday: "long",
+		year: "numeric",
+		month: "long",
+		day: "numeric",
+	});
+	post.date = post.date.toISOString();
 
 	res.render("post-detail", { post: post });
+});
+
+// to edit the post
+router.get("/posts/:id/edit", async function (req, res, next) {
+  let postId = req.params.id; // this gets the id part from the URL
+
+  try {
+    postId = new ObjectId(postId);
+  } catch(error) {
+    return next(error);
+  }
+
+	const post = await db
+		.getDb()
+		.collection("posts")
+		.findOne({ _id: postId }, { title: 1, summary: 1, body: 1 });
+
+	if (!post) {
+		return res.status(404).render("404");
+	}
+
+	res.render("update-post", { post: post });
+});
+
+// to get the POST req to edit the post
+router.post("/posts/:id/edit", async (req, res) => {
+	const postId = new ObjectId(req.params.id);
+	const result = await db
+		.getDb()
+		.collection("posts")
+		.updateOne(
+			{ _id: postId },
+			{
+				$set: {
+					title: req.body.title,
+					summary: req.body.summary,
+					body: req.body.content,
+					// date: new Date()
+				},
+			}
+		);
+	res.redirect("/posts");
+});
+
+// to delete a post
+router.post("/posts/:id/delete", async (req, res) => {
+	const postId = new ObjectId(req.params.id);
+	const post = await db.getDb().collection("posts").deleteOne({ _id: postId });
+
+	if (!post) {
+		return res.status(404).render("404");
+	}
+	res.redirect("/posts");
 });
 
 module.exports = router;
