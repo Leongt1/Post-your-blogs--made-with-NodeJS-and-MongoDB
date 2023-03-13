@@ -10,18 +10,15 @@
   <%- include('includes/header') %>
   <main id="all-posts">
     <h1>All Posts</h1>
-    <!-- if there are no posts to show -->
-    <% if(!posts || posts.length === 0) { %>
-      <p>No posts found - maybe start creating some new posts</p>
+    <% if (!posts || posts.length === 0) { %>
+      <p>No posts found - maybe start creating some?</p>
       <a class="btn" href="/new-post">Create a new Post</a>
-    <% }else { %>
+    <% } else { %>
       <ol id="posts-list">
-        <!-- to loop through the posts array -->
-        <% for(const post of posts) { %> 
-        <li>
-          <!-- to include the external file with the post values -->
-          <%- include('includes/post-item', {post: post}) %>
-        </li>
+        <% for (const post of posts) { %>
+          <li>
+            <%- include('includes/post-item', { post: post }) %>
+          </li>
         <% } %>
       </ol>
     <% } %>

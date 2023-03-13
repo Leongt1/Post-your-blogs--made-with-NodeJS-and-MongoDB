@@ -11,7 +11,8 @@ const app = express();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-app.use(express.urlencoded({ extended: true })); // Parse incoming request bodies
+app.use(express.urlencoded({ extended: true })); // Parse incoming request bodies (for form submission to serve backend)
+app.use(express.json()); // to parse incoming json formats (for working with json formats)
 app.use(express.static('public')); // Serve static files (e.g. CSS files)
 
 app.use(blogRoutes);
@@ -23,7 +24,6 @@ app.use(function (error, req, res, next) {
   res.status(500).render('500');
 });
 
-db.connectToDatabase().then(() => {
-  //listen only when the database is connected
+db.connectToDatabase().then(function () {
   app.listen(3000);
 });
